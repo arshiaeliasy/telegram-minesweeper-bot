@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+token.txt
+.env
+stats.json
+stats.json.tmp
+tests/
+*.zip
+*.log
+README.md
+Dockerfile
+.dockerignore
