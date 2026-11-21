@@ -335,6 +335,11 @@ bot/
 ## 🧪 تست‌ها
 
 ```bash
+# لینوکس / مک
+python -m unittest discover -s tests -t . -v
+
+# ویندوز (کنسول پیش‌فرض cp1252 است و متن فارسی خطا می‌دهد)
+set PYTHONIOENCODING=utf-8
 python -m unittest discover -s tests -t . -v
 ```
 

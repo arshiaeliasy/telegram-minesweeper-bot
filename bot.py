@@ -993,7 +993,30 @@ class MinesweeperBot:
 
     # ------------------------------------------------------------------ حلقه
     def run(self, poll_timeout: int = 25, workers: int = 8) -> None:
-        me = self.api.get_me()
+        # این متد مستقیم هم صدا زده می‌شود (نه فقط از main)، پس خودش کنسول را
+        # UTF-8 می‌کند تا پیام‌های فارسی/اموجی روی ویندوز خطا ندهند.
+        _force_utf8_console()
+        try:
+            me = self.api.get_me()
+        except TelegramError as exc:
+            # توکن اشتباه/باطل‌شده یا وبهوک نامعتبر: پیام واضح بده، نه traceback.
+            logger.error("اتصال به تلگرام ممکن نشد: %s", exc)
+            print(
+                "❌ ربات روشن نشد؛ توکن پذیرفته نشد.\n"
+                "   • توکن را از @BotFather دوباره بگیر (اگر لو رفته: /revoke).\n"
+                "   • مطمئن شو توکن کامل کپی شده و فاصلهٔ اضافه ندارد.\n"
+                f"   جزئیات: {exc}"
+            )
+            return
+        except TelegramNetworkError as exc:
+            logger.error("دسترسی به تلگرام ممکن نشد: %s", exc)
+            print(
+                "❌ ربات روشن نشد؛ به api.telegram.org دسترسی نداریم.\n"
+                "   • اینترنت/پروکسی/فیلترشکن و DNS را بررسی کن.\n"
+                f"   جزئیات: {exc}"
+            )
+            return
+
         logger.info("ربات @%s آماده است (شناسه: %s)", me.get("username"), me.get("id"))
         print(f"✅ ربات @{me.get('username')} روشن شد. برای توقف Ctrl+C را بزن.")
 

@@ -1,0 +1,15 @@
+# نرمال‌سازی پایان خطوط: در مخزن LF، روی ویندوز CRLF
+* text=auto eol=lf
+
+# اسکریپت‌ها باید LF بمانند تا روی لینوکس/مک اجرا شوند
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# این‌ها باینری هستند
+*.png binary
+*.jpg binary
+*.zip binary
+
+# جلوگیری از نمایش حجم زیاد در دیف‌های گیت‌هاب
+*.json linguist-language=JSON

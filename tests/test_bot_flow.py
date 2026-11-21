@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import ui  # noqa: E402
 from bot import MinesweeperBot  # noqa: E402
 from storage import StatsStorage  # noqa: E402
+from telegram_api import TelegramError, TelegramNetworkError  # noqa: E402
 
 TMP_ROOT = Path(__file__).resolve().parent
 
@@ -35,6 +36,9 @@ class FakeAPI:
         self.answered: list[dict] = []
         self._message_id = 100
         self.member_status = "administrator"
+        # برای تست راه‌اندازی: اگر ست شوند، getMe خطا می‌دهد.
+        self.auth_error: str | None = None
+        self.network_error: str | None = None
 
     def get_chat_member(self, chat_id, user_id):
         return {"status": self.member_status, "user": {"id": user_id}}
@@ -53,6 +57,13 @@ class FakeAPI:
     def answer_callback_query(self, callback_query_id, text=None, show_alert=False):
         self.answered.append({"id": callback_query_id, "text": text, "alert": show_alert})
         return True
+
+    def get_me(self):
+        if self.network_error:
+            raise TelegramNetworkError(f"getMe: {self.network_error}")
+        if self.auth_error:
+            raise TelegramError("getMe", self.auth_error, 401)
+        return {"id": 424242, "username": "minesweeper_test_bot"}
 
     # ------------------------------------------------------------- کمکی
     @property
@@ -777,6 +788,22 @@ class TopicRoutingTest(BotTestCase):
         self.bot.handle_update(message(self.next_id(), "/topic"))
         self.assertIn("گروه", self.api.sent[-1]["text"])
         self.assertIsNone(self.storage.get_topic(PRIVATE))
+
+
+class StartupFailureTest(BotTestCase):
+    """اگر توکن اشتباه باشد یا شبکه نباشد، ربات باید پیام واضح بدهد — نه traceback."""
+
+    def test_bad_token_exits_cleanly_without_polling(self):
+        self.api.auth_error = "Unauthorized"
+        self.api.get_updates = lambda **kwargs: self.fail("نباید وارد حلقهٔ دریافت آپدیت شود")
+        with self.assertLogs("minesweeper.bot", level="ERROR"):
+            self.bot.run()
+
+    def test_network_failure_exits_cleanly(self):
+        self.api.network_error = "timeout"
+        self.api.get_updates = lambda **kwargs: self.fail("نباید وارد حلقهٔ دریافت آپدیت شود")
+        with self.assertLogs("minesweeper.bot", level="ERROR"):
+            self.bot.run()
 
 
 class GroupIsolationTest(BotTestCase):
